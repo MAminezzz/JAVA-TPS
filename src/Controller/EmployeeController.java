@@ -115,6 +115,7 @@ public class EmployeeController {
             EmployeeView.ModifierFail("Veuillez choisir un employé.");
         }
     }
+    
     public static int getId(){
         int selectedRow = employeeView.getTable().getSelectedRow();
         int id=-1;
@@ -157,6 +158,46 @@ public class EmployeeController {
         employeeView.getRoleComboBox().setSelectedItem(employee.getRole());
         employeeView.getPosteComboBox().setSelectedItem(employee.getPoste());
         employeeView.getDeselectButton().setVisible(true);
+    }
+    private void handleExport() {
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setFileFilter(new FileNameExtensionFilter("Fichiers CSV", "csv"));
+
+        if (fileChooser.showSaveDialog(employeeView) == JFileChooser.APPROVE_OPTION) {
+            try {
+                String filePath = fileChooser.getSelectedFile().getAbsolutePath();
+                if (!filePath.toLowerCase().endsWith(".txt")) {
+                    filePath += ".txt";
+                }
+
+                List<Employee> employees = employeeModel.findAll();
+                employeeModel.exportData(filePath, employees);
+                employeeView.showSuccessMessage("Exportation réussie !");
+            } catch (Exception ex) {
+                employeeView.showErrorMessage("Erreur lors de l'exportation : " + ex.getMessage());
+            }
+        }
+    }
+    private void handleImport() {
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setFileFilter(new FileNameExtensionFilter("Fichiers CSV", "txt"));
+
+        if (fileChooser.showOpenDialog(employeeView) == JFileChooser.APPROVE_OPTION) {
+            try {
+                String filePath = fileChooser.getSelectedFile().getAbsolutePath();
+                employeeModel.importData(filePath);
+                employeeView.showSuccessMessage("Importation réussie !");
+            } catch (Exception ex) {
+                employeeView.showErrorMessage("Erreur lors de l'importation : " + ex.getMessage());
+            }
+        }
+    }
+    public void importerFichier() {
+        handleImport(); // Appelle la logique d'importation existante
+    }
+
+    public void exporterFichier() {
+        handleExport(); // Appelle la logique d'exportation existante
     }
 
     public static void deselectEmployee() {

@@ -1,5 +1,10 @@
 package DAO;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -113,7 +118,51 @@ public class EmployeeDAOImpl implements GeneriqueDAOI<Employee>{
             EmployeeView.ModifierFail("Erreur lors de la mise à jour.");
         }
     }
+    @Override
+    public void importData(String filePath) throws IOException {
+        // Assurez-vous que cette requête correspond à votre table actuelle dans la base de données
+        String query = "INSERT INTO employee (nom, prenom, salaire, email, phone, role, poste) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        try (BufferedReader reader = new BufferedReader(new FileReader(filePath));
+             PreparedStatement pstmt = connection.prepareStatement(query)) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] data = line.split(",");
+                pstmt.setString(1, data[0].trim()); // Nom
+                pstmt.setString(2, data[1].trim()); // Prénom
+                pstmt.setDouble(3, Double.parseDouble(data[2].trim())); // Salaire
+                pstmt.setString(4, data[3].trim()); // Email
+                pstmt.setString(5, data[4].trim()); // Téléphone
+                pstmt.setString(6, data[5].trim()); // Rôle
+                pstmt.setString(7, data[6].trim()); // Poste
+                pstmt.addBatch();
+                
+            }
+            pstmt.executeBatch(); // Exécute toutes les requêtes préparées en batch
+            System.out.println("Employees imported successfully!");
+        } catch (Exception e) {
+            e.printStackTrace(); // Affiche l'exception pour déboguer si une erreur survient
+        }
+    }
 
+    @Override
+public void exportData(String fileName, List<Employee> data) throws IOException {
+    try (BufferedWriter writer = new BufferedWriter(new FileWriter(fileName))) {
+        // En-tête du fichier CSV
+        writer.write("Last Name,First Name,Salary,Email,Phone,Role,Poste");
+        writer.newLine();
+        for (Employee employee : data) {
+            // Formate chaque ligne d'employé dans le fichier
+            String line = String.format("%s,%s,%.2f,%s,%s,%s,%s",
+                    employee.getNom(), employee.getPrenom(),
+                    employee.getSalaire(), employee.getEmail(),
+                    employee.getPhone(), employee.getRole(),
+                    employee.getPoste());
+            writer.write(line);
+            writer.newLine();
+        }
+        System.out.println("Employees exported successfully!");
+    }
+}
 
 
     @Override
